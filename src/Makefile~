@@ -1,0 +1,26 @@
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
+
+CFLAGS += -fPIC
+INC_DIR += -I../inc
+CPPFLAGS += $(INC_DIR)
+
+$(SUB_TARGET): $(OBJS)
+	$(LD) -r -o $@ $^
+#	$(LD) -o $@ $^
+
+include $(SRCS:.c=.d)
+
+%.d: %.c
+	set -e; rm -f $@; \
+	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+#%.o: %.c
+#	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) $(INC_DIR) -fPIC 
+
+clean:
+	@rm -f *.o
+	@rm -f *.d *.d.*
+

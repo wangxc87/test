@@ -1,0 +1,37 @@
+#include ./arm-config.mk
+include ./Rules.make
+
+CFLAGS += -g -O2
+
+SUB_DIRS = src
+DEMO_DIRS = demo
+
+export SUB_TARGET = build.o
+#export SUB_OBJS = $(foreach dir, $(SUB_DIRS), $(dir)/$(SUB_TARGET))
+
+LIBRARY_SO = libbsp4dm8168.so
+
+.PHONY: all clean install uninstall $(SUB_DIRS) $(DEMO_DIRS)
+
+all: $(DEMO_DIRS)
+
+$(DEMO_DIRS): $(LIBRARY_SO)
+	make -C $@
+
+$(LIBRARY_SO): $(SUB_DIRS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -shared -o $@ $(foreach dir, $^, $(dir)/$(SUB_TARGET)) $(LIBS)
+
+$(SUB_DIRS):
+	make -C $@
+
+clean:
+	@rm -f $(LIBRARY_SO)
+	for dir in $(SUB_DIRS); do make -C $$dir clean; done
+	for dir in $(DEMO_DIRS); do make -C $$dir clean; done
+	
+install:
+	cp $(LIBRARY_SO) $(LIBRARY_INSTALL_DIR)/
+	make -C $(DEMO_DIRS) install
+	
+uninstall:
+	@rm -f $(LIBRARY_INSTALL_DIR)/$(LIBRARY_SO)

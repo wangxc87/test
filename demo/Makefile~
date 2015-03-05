@@ -1,0 +1,45 @@
+#include ../arm-config.mk
+#include ../Rules.make
+
+LIB_DIR += -L../
+INC_DIR += -I../inc
+LIBS = -lbsp4dm8168
+
+CFLAGS += -g -O2
+CFLAGS += $(LIBS)
+CPPFLAGS += $(INC_DIR)
+CPPFLAGS += $(LIB_DIR)
+
+
+SRCS := $(wildcard *.c)
+OBJS := $(SRCS:.c=.o)
+
+APPS := $(OBJS:%.o=%)
+
+.PHONY: all clean
+
+all: $(APPS)
+
+$(APPS): %: %.o
+	@echo Creating $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
+
+include $(SRCS:.c=.d)
+
+%.d: %.c
+	set -e; rm -f $@; \
+	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+#%.o: %.c
+#	$(CC) -c $< $(CFLAGS) $(INCLUDE_DIR)
+
+clean:
+	@echo ""
+	@echo "Cleaning binaries..."
+	@echo ""
+	@rm -f $(APPS)
+	@rm -f $(OBJS)
+	@rm -f *.d *.d.*
+	
